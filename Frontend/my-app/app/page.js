@@ -1,4 +1,5 @@
-'use client'
+'use client';
+
 import axios from "axios";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -42,7 +43,7 @@ export default function Home() {
       setUsername(localStorage.getItem('username') || 'User');
     } catch (err) {
       setError('Failed to fetch cards. Please try again.');
-      if (err.status) {
+      if (err.response && err.response.status === 401) {
         localStorage.removeItem('token');
         router.push('/login');
       }
@@ -76,6 +77,10 @@ export default function Home() {
       fetchCards();
     } catch (err) {
       setError('Failed to add card. Please try again.');
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem('token');
+        router.push('/login');
+      }
     }
   };
 
@@ -136,6 +141,7 @@ export default function Home() {
                     <p className="text-gray-400">
                       <span className="font-medium text-gray-500">Balance Payment:</span> Rs {card.currentBalance}
                     </p>
+                    <p className="text-blue-500 underline mt-2">Click here for more details</p>
                   </div>
                 </li>
               </Link>

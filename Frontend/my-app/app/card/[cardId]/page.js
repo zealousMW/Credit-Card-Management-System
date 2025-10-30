@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, use } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import LimitChart from '@/components/LimitCharts';
 import TrendChart from '@/components/TrendChart';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 export default function CardDetailsPage() {
   const params = useParams();
   const cardId = params.cardId;
+  const router = useRouter();
 
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,33 +32,43 @@ export default function CardDetailsPage() {
       });
       setCard(response.data);
     } catch (err) {
-      setError('Failed to fetch card details.');
-      console.error(err);
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem('token');
+        router.push('/login');
+      } else {
+        setError('Failed to fetch card details.');
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }
-  }, [cardId]);
+  }, [cardId, router]);
 
   useEffect(() => {
     fetchCardDetails();
   }, [fetchCardDetails]);
 
-  
-  useEffect(() => {
-    const fetchCategory = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:3000/api/categories`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        console.log('Category data:', response.data[0]);
-        setCategory(response.data);
-      } catch (err) {
+  const fetchCategory = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:3000/api/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Category data:', response.data[0]);
+      setCategory(response.data);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem('token');
+        router.push('/login');
+      } else {
         console.error('Failed to fetch card category.', err);
       }
-  }
+    }
+  };
+
+  useEffect(() => {
     fetchCategory();
-}, []);
+  }, []);
 
   const handleAddBill = async (e) => {
     e.preventDefault();
@@ -111,13 +122,22 @@ export default function CardDetailsPage() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    router.push('/login');
+  };
+
   if (loading) return <div>Loading card details...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!card) return <div>Card not found.</div>;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Card **** **** **** {card.cardNumber}</h1>
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Card Details: **** **** **** {card.cardNumber}</h1>
+        <Button variant="outline" onClick={handleLogout} className="text-black">Logout</Button>
+      </header>
       <div className="grid grid-cols-12 gap-6">
         {/* Top Row */}
         <div className="col-span-8 bg-gray-900 p-6 rounded-lg shadow-md">
@@ -212,14 +232,14 @@ export default function CardDetailsPage() {
                 </thead>
                 <tbody>
                   {card.bills.slice(0, 10).map(bill => {
-                    const categoryName = category.find(cat => cat.id === bill.category_id)?.name || 'Unknown';
+                    const categoryName = Array.isArray(category) ? category.find(cat => cat.id === bill.category_id)?.name || 'Unknown' : 'Unknown';
                     return (
                       <tr key={bill.id} className="hover:bg-gray-800">
                         <td className="px-4 py-2 border-b border-gray-700">{new Date(bill.bill_date).toLocaleDateString()}</td>
-                        <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.billed_amount).toFixed(2)}</td>
+                        <td className="px-4 py-2 border-b border-gray-700">₹{parseFloat(bill.billed_amount).toFixed(2)}</td>
                         <td className='px-4 py-2 border-b border-gray-700'>{categoryName}</td>
-                        <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.minimum_payment_due).toFixed(2)}</td>
-                        <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.monthly_cleared_amount).toFixed(2)}</td>
+                        <td className="px-4 py-2 border-b border-gray-700">₹{parseFloat(bill.minimum_payment_due).toFixed(2)}</td>
+                        <td className="px-4 py-2 border-b border-gray-700">₹{parseFloat(bill.monthly_cleared_amount).toFixed(2)}</td>
                         <td className="px-4 py-2 border-b border-gray-700">
                           <Button variant="outline" className="text-black" onClick={() => handleMakePayment(bill.id)}>
                             Make Payment

@@ -59,7 +59,8 @@ exports.getInsights = async (req, res) => {
         }
         const cardData = cards[0];
         const [bills] = await db.query(
-            'SELECT billed_amount, monthly_cleared_amount, bill_date FROM monthly_bills WHERE card_id = ? ORDER BY bill_date DESC',
+            `SELECT billed_amount, monthly_cleared_amount, bill_date ,c.name as Category 
+             FROM monthly_bills mb JOIN categories c ON mb.category_id = c.id WHERE mb.card_id = ? ORDER BY mb.bill_date DESC LIMIT 20`,
             [cardId]
         );
         const historySummary = calculateHistorySummary(bills);
@@ -69,12 +70,13 @@ exports.getInsights = async (req, res) => {
             creditLimit: cardData.credit_limit,
             currentBalance: cardData.current_balance,
             utilization: utilization,
-            ...historySummary
+            bills: bills,
             
 
         });
         res.status(200).json(insights);
     } catch (error) {
+        console.error('Error in getInsights:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 }

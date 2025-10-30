@@ -11,53 +11,65 @@ async function getFinancialInsights(financialData) {
   try {
   
     const systemInstruction = `
-         You are a senior financial advisor AI. Analyze the following summary of a user's credit card usage.
+        You are a senior financial advisor AI. Your task is to perform a detailed analysis of a user's credit card usage based on their last 20 transactions.
 
         Primary Metrics:
         - Credit Limit: $${financialData.creditLimit}
         - Current Balance: $${financialData.currentBalance}
         - Credit Utilization: ${financialData.utilization}%
 
-        Historical Summary (${financialData.monthsOfHistory} months):
-        - Spending Trend: ${financialData.spendingTrend}
-        - Average Monthly Spending: $${financialData.averageMonthlySpending}
-        - Payment Behavior: The user ${financialData.isPayingInFull ? 'consistently pays their bill in full' : 'often carries a balance'}.
-        - Average Payment-to-Bill Ratio: ${ (financialData.averagePaymentRatio * 100) }%
-         today's date is ${new Date().toISOString().split('T')[0]}.
+        Recent Transaction History (up to 20 most recent bills):
+        ${financialData.bills}
 
         Instructions:
-        1.  **Risk Score:** Based on all data, determine a risk score ("Low", "Medium", "High").
-        2.  **Spending Habit Analysis:** Briefly comment on the user's spending trend.
-        3.  **Payment Behavior Analysis:** Briefly comment on the user's payment habits.
-        4.  **Actionable Advice:** Provide one clear, actionable piece of advice.
-        5.  **Predicted Limit Date:** Predict when the user might reach their limit.
-
-        Respond ONLY with a valid JSON object matching the schema.
-    `;
+        1.  **Top Spending Category:** Identify the category with the highest spending from the recent history provided.
+        2.  **Spending Habit Analysis:** Briefly describe the user's recent spending pattern. Are they spending on needs (Groceries, Utilities) or wants (Shopping, Entertainment)? Is their spending frequent?
+        3.  **Payment Behavior Analysis:** Based on the billed vs. paid amounts in the recent history, does the user tend to pay in full or carry a balance?
+        4.  **Actionable Advice:** Provide one clear, actionable piece of advice directly related to the transaction history. For example, "Your recent spending on 'Dining Out' is high; exploring home-cooked meals could offer significant savings."
+        5.  **Risk Score:** Based on all the data, determine a risk score ("Low", "Medium", "High").
+         6.**Predicted Limit Date:** Based on the recent spending velocity and current balance, predict a likely date the user might reach their credit limit. If not likely in the near future, respond with the string "Not in the near future". Provide the date in YYYY-MM-DD format if applicable.
+        todays date is ${new Date().toISOString().split('T')[0]}. all in rupees.
+        Respond ONLY with a valid JSON object matching the schema. Do not include any other text, explanations, or markdown formatting.`;
 
     // The configuration forces the model to output a JSON object matching our schema
-    const config = {
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: Type.OBJECT,
-        required: ["riskScore", "predictedLimitDate", "spendingHabitAnalysis", "paymentBehaviorAnalysis", "actionableAdvice", "utilization"],
-        properties: {
-          riskScore: { type: Type.STRING },
-          predictedLimitDate: { type: Type.STRING },
-          analysis: { type: Type.STRING },
-          utilization: { type: Type.STRING  },
-            spendingHabitAnalysis: { type: Type.STRING },
-            paymentBehaviorAnalysis: { type: Type.STRING },
-            actionableAdvice: { type: Type.STRING },
-
+     const config = {
+    thinkingConfig: {
+      thinkingBudget: -1,
+    },
+    imageConfig: {
+      imageSize: '1K',
+    },
+    responseMimeType: 'application/json',
+    responseSchema: {
+      type: Type.OBJECT,
+      required: ["riskScore", "topSpendingCategory", "spendingHabitAnalysis", "paymentBehaviorAnalysis", "actionableAdvice", "predictedLimitDate"],
+      properties: {
+        riskScore: {
+          type: Type.STRING,
+        },
+        topSpendingCategory: {
+          type: Type.STRING,
+        },
+        spendingHabitAnalysis: {
+          type: Type.STRING,
+        },
+        paymentBehaviorAnalysis: {
+          type: Type.STRING,
+        },
+        actionableAdvice: {
+          type: Type.STRING,
+        },
+        predictedLimitDate: {
+          type: Type.STRING,
         },
       },
-    };
+    },
+  };
 
     
     const contents = [{
         role: 'user',
-        parts: [{ text: 'Analyze the provided financial data.' }],
+        parts: [{ text: systemInstruction}],
     }];
 
     const response = await ai.models.generateContent({
@@ -74,12 +86,11 @@ async function getFinancialInsights(financialData) {
     console.error('Error calling Gemini API:', error);
     return {
       riskScore: 'Error',
-      predictedLimitDate: 'N/A',
-      analysis: 'Could not generate AI insights at this time.',
-        utilization: 'N/A',
-        spendingHabitAnalysis: 'N/A',
-        paymentBehaviorAnalysis: 'N/A',
-        actionableAdvice: 'N/A',
+      topSpendingCategory: 'Error',
+      spendingHabitAnalysis: 'Error',
+      paymentBehaviorAnalysis: 'Error',
+      actionableAdvice: 'Ai can not reached right now',
+      predictedLimitDate: 'Error',
 
     };
   }
