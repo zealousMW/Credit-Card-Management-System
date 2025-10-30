@@ -39,7 +39,7 @@ export default function Register() {
                         <input
                             type="text"
                             id="username"
-                            name="username"
+                            name="name"
                             placeholder="Enter your username"
                             value={formData.name}
                             onChange={handleChange}
