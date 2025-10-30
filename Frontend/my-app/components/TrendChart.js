@@ -28,7 +28,7 @@ export default function TrendChart({ cardId }) {
   }, [cardId]);
 
   if (loading) return <p>Loading trend data...</p>;
-  if (data.length < 2) return <p>Not enough data to display a spending trend.</p>;
+  // if (data.length < 2) return <p>Not enough data to display a spending trend.</p>;
 
   return (
     <div style={{ width: '100%', height: 300, marginTop: '20px' }}>

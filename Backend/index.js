@@ -10,6 +10,9 @@ const billRoutes = require('./routes/billRoutes')
 
 const insightRoutes = require('./routes/insightRoutes');
 
+const categoryRoutes = require('./routes/categoryRoutes');
+
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -17,6 +20,8 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors(allow='*'));
 
+
+app.use('/api/categories', categoryRoutes);
 app.use('/api/cards',cardRoutes);
 app.use('/api/bills',billRoutes);
 app.use('/api/insights',insightRoutes);
@@ -63,19 +68,38 @@ const intilializeDB = async () =>{
         await db.query(createCardTableQuery);
         console.log("Card table ensured.");
 
+        const createCategoryTableQuery = `
+        CREATE TABLE IF NOT EXISTS categories (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE
+    )`;
+        await db.query(createCategoryTableQuery);
+        console.log("Category table ensured.");
+
         const createMonthlyBillTableQuery = `
         CREATE TABLE IF NOT EXISTS monthly_bills (
             id INT AUTO_INCREMENT PRIMARY KEY,
             card_id INT NOT NULL,
+            category_id INT,
             bill_date DATE NOT NULL,
             billed_amount DECIMAL(10, 2) NOT NULL,
             minimum_payment_due DECIMAL(10, 2) NOT NULL,
             monthly_cleared_amount DECIMAL(10, 2) DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
+            FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE,
+            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
         )`;
         await db.query(createMonthlyBillTableQuery);
         console.log("Monthly Bills table ensured.");
+
+        const [cats] = await db.query('SELECT COUNT(*) AS count FROM categories');
+        if(cats[0].count ===0){
+            const defaultCategories = ['Groceries', 'Utilities', 'Entertainment', 'Travel', 'Dining', 'Healthcare', 'Education', 'Shopping', 'Fuel', 'Miscellaneous'];
+            for(const category of defaultCategories){
+                await db.query('INSERT INTO categories (name) VALUES (?)',[category]);
+            }
+            console.log("Default categories inserted.");
+        }
 
         
     } catch (error) {

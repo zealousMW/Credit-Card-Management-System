@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, use } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import LimitChart from '@/components/LimitCharts';
@@ -19,6 +19,8 @@ export default function CardDetailsPage() {
   const [billDate, setBillDate] = useState('');
   const [billedAmount, setBilledAmount] = useState('');
   const [minPayment, setMinPayment] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [category, setCategory] = useState('');
 
   const fetchCardDetails = useCallback(async () => {
     if (!cardId) return;
@@ -40,6 +42,23 @@ export default function CardDetailsPage() {
     fetchCardDetails();
   }, [fetchCardDetails]);
 
+  
+  useEffect(() => {
+    const fetchCategory = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`http://localhost:3000/api/categories`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Category data:', response.data[0]);
+        setCategory(response.data);
+      } catch (err) {
+        console.error('Failed to fetch card category.', err);
+      }
+  }
+    fetchCategory();
+}, []);
+
   const handleAddBill = async (e) => {
     e.preventDefault();
     try {
@@ -49,7 +68,8 @@ export default function CardDetailsPage() {
           cardId: cardId,
           billDate: billDate,
           billedAmount: billedAmount,
-          minPaymentDue: minPayment
+          minPaymentDue: minPayment,
+          categoryId: selectedCategory
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -58,6 +78,7 @@ export default function CardDetailsPage() {
       setBillDate('');
       setBilledAmount('');
       setMinPayment('');
+      setSelectedCategory('');
       fetchCardDetails();
     } catch (err) {
       alert('Failed to add bill.');
@@ -122,7 +143,7 @@ export default function CardDetailsPage() {
             <h2 className="text-xl font-semibold">Monthly Bills</h2>
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+                <Button className="bg-blue-500npm run d text-white hover:bg-blue-600 transition-colors">
                   + Add Bill
                 </Button>
               </DialogTrigger>
@@ -138,6 +159,17 @@ export default function CardDetailsPage() {
                     required
                     className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="" disabled>Select Category</option>
+                    {category && category.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
                   <input
                     type="number"
                     placeholder="Billed Amount"
@@ -172,25 +204,30 @@ export default function CardDetailsPage() {
                   <tr className="bg-gray-800">
                     <th className="px-4 py-2 border-b border-gray-700">Bill Date</th>
                     <th className="px-4 py-2 border-b border-gray-700">Billed Amount</th>
+                    <th className="px-4 py-2 border-b border-gray-700">Category</th>
                     <th className="px-4 py-2 border-b border-gray-700">Minimum Due</th>
                     <th className="px-4 py-2 border-b border-gray-700">Amount Cleared</th>
                     <th className="px-4 py-2 border-b border-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {card.bills.slice(0, 10).map(bill => (
-                    <tr key={bill.id} className="hover:bg-gray-800">
-                      <td className="px-4 py-2 border-b border-gray-700">{new Date(bill.bill_date).toLocaleDateString()}</td>
-                      <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.billed_amount).toFixed(2)}</td>
-                      <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.minimum_payment_due).toFixed(2)}</td>
-                      <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.monthly_cleared_amount).toFixed(2)}</td>
-                      <td className="px-4 py-2 border-b border-gray-700">
-                        <Button variant="outline" onClick={() => handleMakePayment(bill.id)}>
-                          Make Payment
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {card.bills.slice(0, 10).map(bill => {
+                    const categoryName = category.find(cat => cat.id === bill.category_id)?.name || 'Unknown';
+                    return (
+                      <tr key={bill.id} className="hover:bg-gray-800">
+                        <td className="px-4 py-2 border-b border-gray-700">{new Date(bill.bill_date).toLocaleDateString()}</td>
+                        <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.billed_amount).toFixed(2)}</td>
+                        <td className='px-4 py-2 border-b border-gray-700'>{categoryName}</td>
+                        <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.minimum_payment_due).toFixed(2)}</td>
+                        <td className="px-4 py-2 border-b border-gray-700">${parseFloat(bill.monthly_cleared_amount).toFixed(2)}</td>
+                        <td className="px-4 py-2 border-b border-gray-700">
+                          <Button variant="outline" className="text-black" onClick={() => handleMakePayment(bill.id)}>
+                            Make Payment
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

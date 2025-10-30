@@ -82,7 +82,8 @@ exports.getCardbyId = async(req,res)=>{
         const userId = req.user.id;
         const cardId = req.params.cardId;
         const query = `SELECT cc.id, cc.card_number_encrypted, cc.credit_limit, COALESCE(SUM(mb.billed_amount), 0) - COALESCE(SUM(mb.monthly_cleared_amount),0) AS current_balance
-    FROM cards cc
+        
+        FROM cards cc
     LEFT JOIN monthly_bills mb ON cc.id = mb.card_id
     WHERE cc.user_id = ?
     GROUP BY cc.id;`;
@@ -92,7 +93,7 @@ exports.getCardbyId = async(req,res)=>{
         }
         const card = cards[0];
 
-        const billsql = `SELECT id, bill_date, billed_amount, minimum_payment_due, monthly_cleared_amount, created_at FROM monthly_bills WHERE card_id = ? ORDER BY bill_date DESC`;
+        const billsql = `SELECT id, bill_date, billed_amount, minimum_payment_due, monthly_cleared_amount,category_id, created_at FROM monthly_bills WHERE card_id = ? ORDER BY bill_date DESC`;
         const [bills] = await db.query(billsql, [cardId]);
         const decryptedCardNumber = decrypt(card.card_number_encrypted);
 
