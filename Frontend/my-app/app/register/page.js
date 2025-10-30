@@ -20,7 +20,7 @@ export default function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:3000/api/auth/register', formData);
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/register`, formData);
             console.log('Registration successful:', response.data);
             alert('Registration successful!');
             

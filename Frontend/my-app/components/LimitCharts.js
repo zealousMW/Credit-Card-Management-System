@@ -48,7 +48,7 @@ export default function LimitChart({ card }) {
         const token = localStorage.getItem('token');
         console.log('Fetching pie chart data for cardId:', card.id, 'and period:', period);
         const response = await axios.get(
-          `http://localhost:3000/api/categories/spending/${card.id}?period=${period}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/categories/spending/${card.id}?period=${period}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log('Fetched pie chart data:', response.data);

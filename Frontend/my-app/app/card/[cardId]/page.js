@@ -27,7 +27,7 @@ export default function CardDetailsPage() {
     if (!cardId) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:3000/api/cards/${cardId}`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cards/${cardId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCard(response.data);
@@ -51,7 +51,7 @@ export default function CardDetailsPage() {
   const fetchCategory = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:3000/api/categories`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('Category data:', response.data[0]);
@@ -74,7 +74,7 @@ export default function CardDetailsPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:3000/api/bills', 
+      await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/bills`, 
         {
           cardId: cardId,
           billDate: billDate,
@@ -109,7 +109,7 @@ export default function CardDetailsPage() {
 
     try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://localhost:3000/api/bills/${billId}`,
+        await axios.put(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/bills/${billId}`,
             { paymentAmount },
             { headers: { Authorization: `Bearer ${token}` } }
         );

@@ -24,7 +24,7 @@ export default function Login() {
         e.preventDefault();
 
         try {
-            const response = await axios.post('http://localhost:3000/api/auth/login', formData);
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, formData);
 
             if(response.status === 200 && response.data.token){
                 console.log('Login successful:', response.data);

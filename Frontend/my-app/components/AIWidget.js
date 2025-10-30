@@ -15,7 +15,7 @@ export default function AIWidget({ cardId }) {
       }
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`http://localhost:3000/api/insights/${cardId}`, {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/insights/${cardId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setInsights(res.data);

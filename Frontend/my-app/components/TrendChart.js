@@ -14,7 +14,7 @@ export default function TrendChart({ cardId }) {
     const fetchTrendData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`http://localhost:3000/api/insights/trends/${cardId}`, {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/insights/trends/${cardId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setData(res.data);
