@@ -1,6 +1,15 @@
 # Credit Card Management System - Full-Stack Technical Challenge
 
 A production-ready prototype of a Credit Card Management System providing secure user authentication, encrypted storage of sensitive financial data, a data-driven dashboard with interactive visualizations, and AI-powered financial insights (Google Gemini Pro).
+🚀 Live Demo
+Try it out here:
+👉 https://credit-card-management-system-lyart.vercel.app/login
+
+You can log in using the demo account below or register a new user to explore the system:
+
+#Demo Credentials:
+-Email: test2@gmail.com
+-Password: 12345678
 
 ## Features
 
