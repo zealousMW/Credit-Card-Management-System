@@ -7,9 +7,9 @@ Try it out here:
 
 You can log in using the demo account below or register a new user to explore the system:
 
-#Demo Credentials:
--Email: test2@gmail.com
--Password: 12345678
+# Demo Credentials:
+- Email: test2@gmail.com
+- Password: 12345678
 
 ## Features
 
